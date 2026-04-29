@@ -23,7 +23,7 @@ export default function SectorMegaMenu({ selectedCategory, onSelectCategory }: P
   }
 
   return (
-    <nav className="relative bg-[#004750] text-white" onMouseLeave={() => setOpenGroup(null)}>
+    <nav className="relative bg-[#002B5C] text-white" onMouseLeave={() => setOpenGroup(null)}>
       <div className="mx-auto flex max-w-7xl items-center gap-8 px-4 py-4 md:px-6">
         <button
           onMouseEnter={() => setOpenGroup(null)}
@@ -48,7 +48,7 @@ export default function SectorMegaMenu({ selectedCategory, onSelectCategory }: P
         </div>
 
         <div className="hidden items-center gap-3 lg:flex">
-          <button className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#004750] shadow-sm">
+          <button className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#002B5C] shadow-sm">
             Buscar <Search className="h-4 w-4" />
           </button>
         </div>
@@ -64,11 +64,11 @@ export default function SectorMegaMenu({ selectedCategory, onSelectCategory }: P
       </div>
 
       {activeGroup && (
-        <div className="absolute left-0 right-0 top-full z-[80] border-t border-white/10 bg-white text-slate-950 shadow-[0_24px_50px_rgba(15,23,42,0.22)]">
+        <div className="absolute left-0 right-0 top-full z-[80] border-t border-white/10 bg-white/50 text-slate-950 shadow-[0_24px_50px_rgba(15,23,42,0.18)] backdrop-blur-xl">
           <div className="mx-auto max-w-7xl px-8 py-8">
             <button
               onClick={() => setOpenGroup(null)}
-              className="mb-9 flex items-center gap-2 text-lg font-medium text-slate-800 transition hover:text-[#0072CE]"
+              className="mb-9 flex items-center gap-2 text-lg font-semibold text-[#002B5C] transition hover:text-[#0072CE]"
             >
               Ir a {activeGroup.title} <ChevronRight className="h-5 w-5" />
             </button>
@@ -78,7 +78,7 @@ export default function SectorMegaMenu({ selectedCategory, onSelectCategory }: P
                 <button
                   key={sector}
                   onClick={() => selectSector(sector)}
-                  className="border-b border-slate-300 pb-3 text-left text-base font-black text-slate-900 transition hover:border-[#0072CE] hover:text-[#0072CE]"
+                  className="border-b border-[#002B5C]/25 pb-3 text-left text-base font-black text-[#002B5C] transition hover:border-[#0072CE] hover:text-[#0072CE]"
                 >
                   {sector}
                 </button>
