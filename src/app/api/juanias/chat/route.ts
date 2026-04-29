@@ -27,23 +27,79 @@ function productUrl(slug: string) {
   return `/producto/${slug}`;
 }
 
+const intentRules = [
+  {
+    id: "mobile",
+    keywords: ["movil", "telefono", "smartphone", "iphone", "samsung", "android", "funda movil", "protector pantalla", "cargador movil"],
+    categories: ["Telefonía móvil", "Electrónica y accesorios", "Informática"],
+    productBoosts: ["funda", "movil", "pantalla", "cargador", "usb", "cable", "telefono", "protector"]
+  },
+  {
+    id: "kidsGift",
+    keywords: ["niño", "nino", "niña", "nina", "infantil", "regalo", "juguete", "cumpleaños", "cumpleanos"],
+    categories: ["Juguetería", "Tiendas de cómic y manga", "Gaming y videojuegos", "Souvenirs y regalos", "Regalos personalizados"],
+    productBoosts: ["puzzle", "juego", "manga", "figura", "mando", "taza", "iman", "regalo"]
+  },
+  {
+    id: "tools",
+    keywords: ["reforma", "herramienta", "bricolaje", "taladro", "broca", "adhesivo", "cinta", "ferreteria", "ferretería"],
+    categories: ["Ferretería y bricolaje"],
+    productBoosts: ["brocas", "cinta", "adhesivo", "kit", "pinzas", "herramienta"]
+  },
+  {
+    id: "sewing",
+    keywords: ["costura", "coser", "hilo", "botones", "boton", "merceria", "mercería", "arreglos"],
+    categories: ["Mercería", "Costura y arreglos"],
+    productBoosts: ["costura", "hilo", "botones", "parche", "kit"]
+  },
+  {
+    id: "homeFragrance",
+    keywords: ["ambientador", "mikado", "lavanda", "incienso", "sándalo", "sandalo", "vela", "aroma"],
+    categories: ["Droguería", "Decoración y hogar", "Productos esotéricos"],
+    productBoosts: ["ambientador", "mikado", "lavanda", "incienso", "vela", "aromatica", "aromática"]
+  },
+  {
+    id: "travel",
+    keywords: ["maleta", "viaje", "mochila", "neceser", "turismo"],
+    categories: ["Maletas y viaje", "Souvenirs y regalos"],
+    productBoosts: ["mochila", "neceser", "maleta", "viaje"]
+  }
+];
+
+function detectIntent(message: string) {
+  const q = normalize(message);
+  return intentRules.find((rule) => rule.keywords.some((keyword) => q.includes(normalize(keyword)))) ?? null;
+}
+
 function localRecommendations(message: string) {
   const q = normalize(message);
-  const scored = marketplaceProducts
+  const intent = detectIntent(message);
+  const tokens = q.split(/\s+/).filter((token) => token.length > 2 && !["buscame", "busca", "quiero", "necesito", "para", "unos", "unas", "algo", "cerca"].includes(token));
+
+  const candidates = intent
+    ? marketplaceProducts.filter((product) => intent.categories.includes(product.category))
+    : marketplaceProducts;
+
+  const scored = candidates
     .map((product) => {
       const haystack = normalize([product.name, product.category, product.description, product.store, product.district].join(" "));
       let score = 0;
-      q.split(/\s+/).filter(Boolean).forEach((token) => {
-        if (haystack.includes(token)) score += 2;
+
+      tokens.forEach((token) => {
+        if (haystack.includes(token)) score += 4;
       });
-      if (q.includes("niño") || q.includes("nino") || q.includes("regalo")) {
-        if (["Juguetería", "Tiendas de cómic y manga", "Gaming y videojuegos", "Souvenirs y regalos", "Regalos personalizados"].includes(product.category)) score += 4;
+
+      if (intent) {
+        if (intent.categories.includes(product.category)) score += 20;
+        intent.productBoosts.forEach((boost) => {
+          if (haystack.includes(normalize(boost))) score += 6;
+        });
       }
-      if (q.includes("reforma") || q.includes("herramienta") || q.includes("bricolaje")) {
-        if (product.category === "Ferretería y bricolaje") score += 5;
-      }
-      if (q.includes("cerca") || q.includes("cercania") || q.includes("cercanía")) score += Math.max(0, 3 - product.distance);
-      if (product.oldPrice) score += 1;
+
+      if ((q.includes("cerca") || q.includes("cercania") || q.includes("cercanía")) && product.distance <= 0.75) score += 4;
+      if ((q.includes("promocion") || q.includes("promoción") || q.includes("oferta")) && product.oldPrice) score += 8;
+      if (product.stock > 0) score += 1;
+
       return { product, score };
     })
     .filter((item) => item.score > 0)
@@ -51,7 +107,11 @@ function localRecommendations(message: string) {
     .slice(0, 4)
     .map((item) => item.product);
 
-  return scored.length ? scored : marketplaceProducts.slice(0, 4);
+  if (scored.length) return scored;
+
+  if (intent) return candidates.sort((a, b) => a.distance - b.distance).slice(0, 4);
+
+  return marketplaceProducts.slice(0, 4);
 }
 
 function fallbackReply(message: string) {
@@ -88,6 +148,7 @@ Reglas estrictas:
 - Responde como humano útil, directo y natural.
 - Usa SOLO productos presentes en el catálogo incluido. No inventes productos, precios, stock ni comercios.
 - Cuando recomiendes un producto, escribe siempre el nombre como enlace markdown usando el enlace incluido, por ejemplo: [Nombre del producto](/producto/slug).
+- Si el usuario pide móvil, teléfono o smartphone, prioriza productos de Telefonía móvil, Electrónica y accesorios o Informática. No recomiendes libros, belleza, moda ni productos irrelevantes.
 - Si el usuario pide un regalo, propone 3-5 opciones concretas y explica por qué.
 - Si pide cercanía, prioriza menor distancia.
 - Si pide promociones, prioriza productos con precio anterior o cupón FINBROADPEAK26.
@@ -121,7 +182,7 @@ ${catalogueContext}`;
       body: JSON.stringify({
         model: GROQ_MODEL,
         messages: groqMessages,
-        temperature: 0.45,
+        temperature: 0.35,
         max_tokens: 500
       })
     });
