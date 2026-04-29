@@ -47,7 +47,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     rating: 4.7,
     stock: 68,
     pickup: "15 min",
-    imageUrl: "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?auto=format&fit=crop&w=900&q=80",
+    imageUrl: "https://www.tiendashoppi.com/cdn/shop/products/tienda-shoppi-ring-pop-min_large.jpg?v=1632072524",
     description: "Anillo de caramelo con sabor a fresa. Producto divertido para regalos, fiestas o compra rapida de barrio.",
     details: ["Sabor fresa", "Unidad individual", "Ideal para fiestas", "Oferta de la semana"]
   },
@@ -64,7 +64,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     rating: 4.6,
     stock: 24,
     pickup: "20 min",
-    imageUrl: "https://images.unsplash.com/photo-1511527661048-7fe73d85e9a4?auto=format&fit=crop&w=900&q=80",
+    imageUrl: "https://m.media-amazon.com/images/I/619eaAmDBkL._AC_UF894,1000_QL80_.jpg",
     description: "Iman de recuerdo inspirado en el skyline de Barcelona, perfecto para turistas o regalos rapidos.",
     details: ["Diseno Barcelona", "Formato premium", "Comercio verificado", "Recogida en Born"]
   },
