@@ -1,5 +1,5 @@
-import MarketplaceExperienceFinal from "@/components/MarketplaceExperienceFinal";
+import MarketplaceExperienceV3 from "@/components/MarketplaceExperienceV3";
 
 export default function Home() {
-  return <MarketplaceExperienceFinal />;
+  return <MarketplaceExperienceV3 />;
 }
