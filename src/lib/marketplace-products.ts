@@ -1,3 +1,5 @@
+import { marketplaceCategories } from "./sectors";
+
 export type MarketplaceProduct = {
   id: string;
   slug: string;
@@ -22,7 +24,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     slug: "pinzas-pequenas-metalicas-pack-12",
     name: "Pinzas pequenas metalicas pack 12",
     store: "Ferreteria Ramblas Pro",
-    category: "Ferreteria",
+    category: "Ferretería y bricolaje",
     district: "Gotico",
     price: 2.95,
     oldPrice: 4.9,
@@ -39,7 +41,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     slug: "anillo-caramelo-fresa",
     name: "Anillo de caramelo sabor fresa",
     store: "DulceRaval",
-    category: "Gominolas",
+    category: "Bazar multiproducto",
     district: "Raval",
     price: 0.99,
     oldPrice: 1.8,
@@ -56,7 +58,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     slug: "iman-premium-barcelona-skyline",
     name: "Iman premium Barcelona skyline",
     store: "Souvenirs Barcelona 92",
-    category: "Souvenirs",
+    category: "Souvenirs y regalos",
     district: "Born",
     price: 4.95,
     oldPrice: 6.5,
@@ -73,7 +75,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     slug: "kit-reforma-rapida",
     name: "Kit reforma rapida: cinta, guantes y cutter",
     store: "Ferreteria Ramblas Pro",
-    category: "Ferreteria",
+    category: "Ferretería y bricolaje",
     district: "Gotico",
     price: 14.95,
     distance: 0.35,
@@ -89,7 +91,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     slug: "pack-oficina-libreta-boligrafos-clips",
     name: "Pack oficina libreta, boligrafos y clips",
     store: "Papereria Catalunya",
-    category: "Papeleria",
+    category: "Papelería y material escolar",
     district: "Eixample",
     price: 8.75,
     oldPrice: 11.2,
@@ -106,7 +108,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     slug: "ramo-urbano-azul-amarillo",
     name: "Ramo urbano azul y amarillo",
     store: "Floristeria La Rambla",
-    category: "Floristeria",
+    category: "Floristería no perecedera",
     district: "Gotico",
     price: 22.5,
     distance: 0.48,
@@ -122,7 +124,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     slug: "bolsa-mix-gominolas-500g",
     name: "Bolsa mix gominolas 500 g",
     store: "DulceRaval",
-    category: "Gominolas",
+    category: "Bazar multiproducto",
     district: "Raval",
     price: 5.9,
     distance: 0.62,
@@ -138,7 +140,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     slug: "taza-ceramica-barcelona-local-edition",
     name: "Taza ceramica Barcelona local edition",
     store: "Souvenirs Barcelona 92",
-    category: "Souvenirs",
+    category: "Cerámica y diseño local",
     district: "Born",
     price: 9.95,
     distance: 0.9,
@@ -151,7 +153,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
   }
 ];
 
-export const marketplaceCategories = ["Todos", "Ferreteria", "Gominolas", "Souvenirs", "Papeleria", "Floristeria"];
+export { marketplaceCategories };
 
 export function money(value: number) {
   return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(value);
