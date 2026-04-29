@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Search } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { sectorMenuGroups } from "@/lib/sectors";
 
 type Props = {
@@ -20,18 +20,6 @@ export default function SectorMegaMenu({ selectedCategory, onSelectCategory }: P
 
   function openOrClose(groupTitle: string) {
     setOpenGroup((current) => current === groupTitle ? null : groupTitle);
-  }
-
-  function focusMainSearch() {
-    setOpenGroup(null);
-    const input = document.querySelector<HTMLInputElement>('[data-faciliteago-search-input="true"]');
-    const fallbackInput = document.querySelector<HTMLInputElement>('input[placeholder*="Busca"], input[placeholder*="pinzas"], input[placeholder*="gominolas"]');
-    const target = input ?? fallbackInput;
-    target?.scrollIntoView({ behavior: "smooth", block: "center" });
-    window.setTimeout(() => {
-      target?.focus();
-      target?.select();
-    }, 350);
   }
 
   return (
@@ -59,17 +47,6 @@ export default function SectorMegaMenu({ selectedCategory, onSelectCategory }: P
           ))}
         </div>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <button
-            type="button"
-            onClick={focusMainSearch}
-            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#002B5C] shadow-sm transition hover:bg-[#FFCC00]"
-            aria-label="Ir al buscador principal"
-          >
-            Buscar <Search className="h-4 w-4" />
-          </button>
-        </div>
-
         <select
           className="w-full rounded-2xl bg-white px-4 py-2 text-sm font-black text-[#002B5C] md:hidden"
           value={selectedCategory}
@@ -81,7 +58,7 @@ export default function SectorMegaMenu({ selectedCategory, onSelectCategory }: P
       </div>
 
       {activeGroup && (
-        <div className="absolute left-0 right-0 top-full z-[80] border-t border-white/10 bg-white/80 text-slate-950 shadow-[0_24px_50px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+        <div className="absolute left-0 right-0 top-full z-[80] border-t border-white/10 bg-white/90 text-slate-950 shadow-[0_24px_50px_rgba(15,23,42,0.18)] backdrop-blur-xl">
           <div className="mx-auto max-w-7xl px-8 py-8">
             <button
               onClick={() => setOpenGroup(null)}
