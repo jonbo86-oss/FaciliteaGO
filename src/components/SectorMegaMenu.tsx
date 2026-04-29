@@ -64,7 +64,7 @@ export default function SectorMegaMenu({ selectedCategory, onSelectCategory }: P
       </div>
 
       {activeGroup && (
-        <div className="absolute left-0 right-0 top-full z-[80] border-t border-white/10 bg-white/50 text-slate-950 shadow-[0_24px_50px_rgba(15,23,42,0.18)] backdrop-blur-xl">
+        <div className="absolute left-0 right-0 top-full z-[80] border-t border-white/10 bg-white/80 text-slate-950 shadow-[0_24px_50px_rgba(15,23,42,0.18)] backdrop-blur-xl">
           <div className="mx-auto max-w-7xl px-8 py-8">
             <button
               onClick={() => setOpenGroup(null)}
