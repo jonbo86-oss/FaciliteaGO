@@ -23,6 +23,10 @@ function normalize(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+function productUrl(slug: string) {
+  return `/producto/${slug}`;
+}
+
 function localRecommendations(message: string) {
   const q = normalize(message);
   const scored = marketplaceProducts
@@ -52,7 +56,7 @@ function localRecommendations(message: string) {
 
 function fallbackReply(message: string) {
   const picks = localRecommendations(message);
-  const lines = picks.map((p) => `• ${p.name} (${p.store}) - ${money(p.price)}, a ${p.distance.toFixed(2)} km, recogida ${p.pickup}.`).join("\n");
+  const lines = picks.map((p) => `• [${p.name}](${productUrl(p.slug)}) (${p.store}) - ${money(p.price)}, a ${p.distance.toFixed(2)} km, recogida ${p.pickup}.`).join("\n");
   return `Te propongo estas opciones reales del catálogo:\n${lines}\n\nPuedes pedirme que filtre por cercanía, precio, promociones o tipo de comercio.`;
 }
 
@@ -71,7 +75,7 @@ export async function POST(request: Request) {
 
     const catalogueContext = marketplaceProducts
       .slice(0, 108)
-      .map((p) => `${p.name} | categoría: ${p.category} | comercio: ${p.store} | precio: ${money(p.price)} | distancia: ${p.distance.toFixed(2)} km | recogida: ${p.pickup} | stock: ${p.stock} | slug: ${p.slug}`)
+      .map((p) => `${p.name} | categoría: ${p.category} | comercio: ${p.store} | precio: ${money(p.price)} | distancia: ${p.distance.toFixed(2)} km | recogida: ${p.pickup} | stock: ${p.stock} | enlace: ${productUrl(p.slug)}`)
       .join("\n");
 
     const cartContext = cart.length
@@ -83,6 +87,7 @@ Tu trabajo es ayudar a comprar en un marketplace local de Barcelona.
 Reglas estrictas:
 - Responde como humano útil, directo y natural.
 - Usa SOLO productos presentes en el catálogo incluido. No inventes productos, precios, stock ni comercios.
+- Cuando recomiendes un producto, escribe siempre el nombre como enlace markdown usando el enlace incluido, por ejemplo: [Nombre del producto](/producto/slug).
 - Si el usuario pide un regalo, propone 3-5 opciones concretas y explica por qué.
 - Si pide cercanía, prioriza menor distancia.
 - Si pide promociones, prioriza productos con precio anterior o cupón FINBROADPEAK26.
