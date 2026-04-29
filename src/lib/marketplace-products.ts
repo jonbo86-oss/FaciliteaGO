@@ -30,9 +30,9 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     rating: 4.8,
     stock: 42,
     pickup: "25 min",
-    imageUrl: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=900&q=80",
-    description: "Pack de pinzas pequenas metalicas para bricolaje, sujeccion, manualidades y pequenas reparaciones domesticas.",
-    details: ["Pack de 12 unidades", "Metalicas", "Recogida rapida en tienda", "Producto en promocion"]
+    imageUrl: "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=900&q=80",
+    description: "Pack de pinzas pequenas para bricolaje ligero, manualidades, juegos infantiles y pequenas reparaciones domesticas.",
+    details: ["Pack de 12 unidades", "Tamano pequeno", "Recogida rapida en tienda", "Producto en promocion"]
   },
   {
     id: "p2",
