@@ -1,5 +1,5 @@
 import { categories, demoLocation, featuredStores, juaniasSuggestions, platformModules, promotions } from "@/lib/demo-data";
-import { Bot, Building2, CheckCircle2, MapPin, Search, ShieldCheck, ShoppingCart, Sparkles, Store, Tag, Truck, Users } from "lucide-react";
+import { Bot, Building2, CheckCircle2, MapPin, Search, ShieldCheck, ShoppingCart, Store, Tag, Users } from "lucide-react";
 
 function Badge({ children }: { children: React.ReactNode }) {
   return <span className="rounded-full bg-caixa-sky px-3 py-1 text-xs font-semibold text-caixa-navy">{children}</span>;
@@ -43,7 +43,7 @@ export default function Home() {
           <h1 className="mt-6 text-5xl font-black leading-tight tracking-tight text-caixa-ink md:text-7xl">
             Compra cerca. Ayuda a tu barrio. Opera como un marketplace real.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-650">
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
             faciliteaGO conecta clientes con comercios locales de Barcelona. La pasarela de pago es simulada, pero el resto del flujo esta pensado como producto real: catalogo, stock, carrito, checkout, pedidos, comercio, admin, incidencias y JuanIAs.
           </p>
           <div className="mt-8 rounded-3xl border border-blue-100 bg-white p-3 shadow-soft">
