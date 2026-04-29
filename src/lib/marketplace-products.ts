@@ -30,7 +30,7 @@ export const marketplaceProducts: MarketplaceProduct[] = [
     rating: 4.8,
     stock: 42,
     pickup: "25 min",
-    imageUrl: "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=900&q=80",
+    imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTAyB7U9Dz5twILkqYUhIzOsBJuCC4zV6ho5Q&s",
     description: "Pack de pinzas pequenas para bricolaje ligero, manualidades, juegos infantiles y pequenas reparaciones domesticas.",
     details: ["Pack de 12 unidades", "Tamano pequeno", "Recogida rapida en tienda", "Producto en promocion"]
   },
