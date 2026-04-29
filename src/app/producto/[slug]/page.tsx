@@ -1,5 +1,6 @@
 import { Clock, MapPin, ShieldCheck, Star, Store, Truck } from "lucide-react";
 import { marketplaceProducts, money } from "@/lib/marketplace-products";
+import { resolvedProductImage } from "@/lib/product-images";
 import { dict, productText, type Lang } from "@/lib/i18n";
 
 export const dynamicParams = true;
@@ -19,7 +20,9 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   const lang: Lang = sp?.lang === "ca" ? "ca" : "es";
   const t = dict[lang];
   const baseProduct = marketplaceProducts.find((item) => item.slug === slug) ?? marketplaceProducts[0];
+  const productIndex = marketplaceProducts.findIndex((item) => item.slug === baseProduct.slug);
   const product = localized(baseProduct, lang);
+  const productImage = resolvedProductImage(baseProduct, productIndex);
 
   return (
     <main className="min-h-screen bg-[#f4f8ff] text-slate-950">
@@ -31,7 +34,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
       </header>
 
       <section className="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:grid-cols-[1fr_0.9fr]">
-        <div className="overflow-hidden rounded-[32px] bg-white shadow-2xl"><img src={product.imageUrl} alt={product.name} className="h-[430px] w-full object-cover" /></div>
+        <div className="overflow-hidden rounded-[32px] bg-white shadow-2xl"><img src={productImage} alt={product.name} className="h-[430px] w-full object-cover" /></div>
         <article className="rounded-[32px] bg-white p-6 shadow-2xl md:p-8">
           <div className="mb-4 flex flex-wrap gap-2"><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-[#002B5C]">{product.category}</span>{product.oldPrice && <span className="rounded-full bg-[#FFCC00] px-3 py-1 text-xs font-black text-[#002B5C]">{t.offer}</span>}</div>
           <h1 className="text-4xl font-black leading-tight text-[#002B5C]">{product.name}</h1>
