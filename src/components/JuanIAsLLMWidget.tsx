@@ -39,26 +39,20 @@ function readLocation() {
   return window.localStorage.getItem("faciliteago-location") || "Las Ramblas, Barcelona";
 }
 
-function normalize(value: string) {
-  return value.trim().toLowerCase();
-}
-
-function syncMarketplaceFilters(text: string) {
-  const q = normalize(text);
-  const input = document.querySelector<HTMLInputElement>('input[placeholder*="Busca"], input[placeholder*="pinzas"], input[placeholder*="gominolas"]');
-  if (!input) return;
-
-  let marketplaceQuery = text;
-  if (q.includes("niño") || q.includes("nino") || q.includes("regalo")) marketplaceQuery = "juguete manga regalo";
-  if (q.includes("reforma") || q.includes("herramienta") || q.includes("bricolaje")) marketplaceQuery = "ferreteria herramienta";
-  if (q.includes("promocion") || q.includes("promoción") || q.includes("oferta")) marketplaceQuery = "";
-
-  const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-  setter?.call(input, marketplaceQuery);
-  input.dispatchEvent(new Event("input", { bubbles: true }));
-
-  const section = Array.from(document.querySelectorAll("section"))[1];
-  window.setTimeout(() => section?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+function renderMessage(text: string) {
+  const parts = text.split(/\[([^\]]+)\]\((\/producto\/[^)]+)\)/g);
+  return parts.map((part, index) => {
+    if (index % 3 === 1) {
+      const href = parts[index + 1];
+      return (
+        <a key={`${part}-${index}`} href={href} className="font-black text-[#0072CE] underline decoration-2 underline-offset-2 hover:text-[#002B5C]">
+          {part}
+        </a>
+      );
+    }
+    if (index % 3 === 2) return null;
+    return <span key={`${part}-${index}`}>{part}</span>;
+  });
 }
 
 export default function JuanIAsLLMWidget() {
@@ -85,7 +79,6 @@ export default function JuanIAsLLMWidget() {
     setMessages(nextMessages);
     setInput("");
     setLoading(true);
-    syncMarketplaceFilters(clean);
 
     try {
       const response = await fetch("/api/juanias/chat", {
@@ -153,7 +146,7 @@ export default function JuanIAsLLMWidget() {
                     : "max-w-[88%] bg-white text-slate-700 shadow-sm"
                 }`}
               >
-                {message.text}
+                {message.role === "assistant" ? renderMessage(message.text) : message.text}
               </div>
             ))}
             {loading && (
