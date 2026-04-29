@@ -7,14 +7,14 @@ import { marketplaceCategories, marketplaceProducts, money, type MarketplaceProd
 import { categoryLabel, dict, getInitialLang, productText, setStoredLang, type Lang } from "@/lib/i18n";
 
 const locations = ["Las Ramblas, Barcelona", "El Born, Barcelona", "Eixample, Barcelona", "Gracia, Barcelona", "Barceloneta, Barcelona"];
-const juaniasImage = "https://i.imgur.com/4f8nYhk.png";
+const juaniasImage = "https://i.imgur.com/LfWe8VX.png";
 type CartLine = MarketplaceProduct & { quantity: number };
 type ChatMessage = { role: "user" | "assistant"; text: string };
 type CurrentUser = { name: string; email: string };
 
 function LanguageToggle({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }) {
   function change(next: Lang) { setLang(next); setStoredLang(next); }
-  return <div className="flex items-center gap-1 rounded-full bg-blue-50 p-1"><button onClick={() => change("es")} className={`rounded-full px-2 py-1 text-base transition ${lang === "es" ? "grayscale opacity-40" : "opacity-100"}`} title="Español">🇪🇸</button><button onClick={() => change("ca")} className={`rounded-full px-2 py-1 text-xs font-black text-[#a32626] transition ${lang === "ca" ? "grayscale opacity-40" : "opacity-100"}`} title="Català">CAT</button></div>;
+  return <div className="flex items-center gap-1 rounded-full bg-blue-50 p-1 shadow-sm ring-1 ring-blue-100"><button onClick={() => change("es")} className={`rounded-full px-3 py-1 text-sm font-black transition ${lang === "es" ? "grayscale opacity-40" : "bg-white opacity-100 shadow-sm"}`} title="Español">🇪🇸 ES</button><button onClick={() => change("ca")} className={`rounded-full px-3 py-1 text-sm font-black transition ${lang === "ca" ? "grayscale opacity-40" : "bg-white text-[#a32626] opacity-100 shadow-sm"}`} title="Català">CAT</button></div>;
 }
 
 function viewProduct(product: MarketplaceProduct, lang: Lang) {
@@ -25,9 +25,10 @@ function viewProduct(product: MarketplaceProduct, lang: Lang) {
 function ProductCard({ product, lang, onAdd }: { product: MarketplaceProduct; lang: Lang; onAdd: (product: MarketplaceProduct) => void }) {
   const p = viewProduct(product, lang);
   const t = dict[lang];
+  const productHref = `/producto/${product.slug}${lang === "ca" ? "?lang=ca" : ""}`;
   return (
     <article className="group overflow-hidden rounded-[28px] bg-white shadow-xl transition hover:-translate-y-1 hover:shadow-2xl">
-      <a href={`/producto/${product.slug}`} className="block">
+      <a href={productHref} className="block">
         <div className="relative h-48 overflow-hidden bg-slate-100">
           <img src={product.imageUrl} alt={p.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
           <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-[#002B5C]">{p.category}</div>
