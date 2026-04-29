@@ -22,6 +22,18 @@ export default function SectorMegaMenu({ selectedCategory, onSelectCategory }: P
     setOpenGroup((current) => current === groupTitle ? null : groupTitle);
   }
 
+  function focusMainSearch() {
+    setOpenGroup(null);
+    const input = document.querySelector<HTMLInputElement>('[data-faciliteago-search-input="true"]');
+    const fallbackInput = document.querySelector<HTMLInputElement>('input[placeholder*="Busca"], input[placeholder*="pinzas"], input[placeholder*="gominolas"]');
+    const target = input ?? fallbackInput;
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(() => {
+      target?.focus();
+      target?.select();
+    }, 350);
+  }
+
   return (
     <nav className="relative bg-[#002B5C] text-white" onMouseLeave={() => setOpenGroup(null)}>
       <div className="mx-auto flex max-w-7xl items-center gap-8 px-4 py-4 md:px-6">
@@ -48,7 +60,12 @@ export default function SectorMegaMenu({ selectedCategory, onSelectCategory }: P
         </div>
 
         <div className="hidden items-center gap-3 lg:flex">
-          <button className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#002B5C] shadow-sm">
+          <button
+            type="button"
+            onClick={focusMainSearch}
+            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-[#002B5C] shadow-sm transition hover:bg-[#FFCC00]"
+            aria-label="Ir al buscador principal"
+          >
             Buscar <Search className="h-4 w-4" />
           </button>
         </div>
