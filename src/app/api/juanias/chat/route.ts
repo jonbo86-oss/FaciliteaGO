@@ -29,6 +29,12 @@ function productUrl(slug: string) {
 
 const intentRules = [
   {
+    id: "edibleKids",
+    keywords: ["comestible", "comer", "dulce", "dulces", "chuche", "chuches", "gominola", "gominolas", "caramelo", "caramelos", "anillo caramelo", "niño dulce", "nino dulce"],
+    categories: ["Bazar multiproducto"],
+    productBoosts: ["gominolas", "caramelo", "anillo", "dulce", "fresa", "bolsa", "mix"]
+  },
+  {
     id: "mobile",
     keywords: ["movil", "telefono", "smartphone", "iphone", "samsung", "android", "funda movil", "protector pantalla", "cargador movil"],
     categories: ["Telefonía móvil", "Electrónica y accesorios", "Informática"],
@@ -68,13 +74,15 @@ const intentRules = [
 
 function detectIntent(message: string) {
   const q = normalize(message);
+  const edibleWords = ["comestible", "comer", "dulce", "dulces", "chuche", "chuches", "gominola", "gominolas", "caramelo", "caramelos"];
+  if (edibleWords.some((word) => q.includes(word))) return intentRules[0];
   return intentRules.find((rule) => rule.keywords.some((keyword) => q.includes(normalize(keyword)))) ?? null;
 }
 
 function localRecommendations(message: string) {
   const q = normalize(message);
   const intent = detectIntent(message);
-  const tokens = q.split(/\s+/).filter((token) => token.length > 2 && !["buscame", "busca", "quiero", "necesito", "para", "unos", "unas", "algo", "cerca"].includes(token));
+  const tokens = q.split(/\s+/).filter((token) => token.length > 2 && !["buscame", "busca", "quiero", "necesito", "para", "unos", "unas", "algo", "mejor", "cerca"].includes(token));
 
   const candidates = intent
     ? marketplaceProducts.filter((product) => intent.categories.includes(product.category))
@@ -92,7 +100,7 @@ function localRecommendations(message: string) {
       if (intent) {
         if (intent.categories.includes(product.category)) score += 20;
         intent.productBoosts.forEach((boost) => {
-          if (haystack.includes(normalize(boost))) score += 6;
+          if (haystack.includes(normalize(boost))) score += 8;
         });
       }
 
@@ -148,6 +156,7 @@ Reglas estrictas:
 - Responde como humano útil, directo y natural.
 - Usa SOLO productos presentes en el catálogo incluido. No inventes productos, precios, stock ni comercios.
 - Cuando recomiendes un producto, escribe siempre el nombre como enlace markdown usando el enlace incluido, por ejemplo: [Nombre del producto](/producto/slug).
+- Si el usuario pide algo comestible, dulce, chuches, gominolas o caramelos, prioriza productos como anillo de caramelo o bolsa mix de gominolas. No recomiendes manga, videojuegos, imanes ni regalos no comestibles.
 - Si el usuario pide móvil, teléfono o smartphone, prioriza productos de Telefonía móvil, Electrónica y accesorios o Informática. No recomiendes libros, belleza, moda ni productos irrelevantes.
 - Si el usuario pide un regalo, propone 3-5 opciones concretas y explica por qué.
 - Si pide cercanía, prioriza menor distancia.
@@ -182,7 +191,7 @@ ${catalogueContext}`;
       body: JSON.stringify({
         model: GROQ_MODEL,
         messages: groqMessages,
-        temperature: 0.35,
+        temperature: 0.25,
         max_tokens: 500
       })
     });
