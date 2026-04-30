@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Clock, MapPin, Minus, Plus, ShieldCheck, ShoppingCart, Star, Store, Truck, X } from "lucide-react";
 import { money, type MarketplaceProduct } from "@/lib/marketplace-products";
 import { dict, productText, type Lang } from "@/lib/i18n";
@@ -34,6 +35,7 @@ function readCart() {
 }
 
 export default function ProductDetailClient({ product: baseProduct, productImage, lang }: Props) {
+  const router = useRouter();
   const t = dict[lang];
   const product = localized(baseProduct, lang);
   const storeLocation = useMemo(() => getStoreLocation(baseProduct), [baseProduct]);
@@ -67,6 +69,31 @@ export default function ProductDetailClient({ product: baseProduct, productImage
       const next = item.quantity + delta;
       return next <= 0 ? [] : [{ ...item, quantity: next }];
     }));
+  }
+
+  function handleCheckout() {
+    if (cart.length === 0) return;
+    const order = {
+      id: `GO-${Date.now().toString().slice(-6)}`,
+      status: lang === "ca" ? "Comanda confirmada" : "Pedido confirmado",
+      store: cart.length === 1 ? cart[0].store : `${new Set(cart.map((item) => item.store)).size} ${lang === "ca" ? "comerços" : "comercios"}`,
+      total: money(subtotal),
+      pickup: `PK-${Date.now().toString().slice(-4)}`,
+      date: new Date().toLocaleDateString("es-ES"),
+      items: cart.map((item) => ({
+        id: item.id,
+        name: localized(item, lang).name,
+        quantity: item.quantity,
+        price: item.price,
+        store: item.store
+      }))
+    };
+    const existingOrders = JSON.parse(window.localStorage.getItem("faciliteago-orders") || "[]");
+    window.localStorage.setItem("faciliteago-orders", JSON.stringify([order, ...existingOrders]));
+    window.localStorage.setItem("faciliteago-cart", JSON.stringify([]));
+    setCart([]);
+    setCartOpen(false);
+    router.push("/usuario");
   }
 
   return (
@@ -133,7 +160,7 @@ export default function ProductDetailClient({ product: baseProduct, productImage
         </article>
       </section>
 
-      {cartOpen && <div className="fixed inset-0 z-[80] flex justify-end bg-slate-950/40"><aside className="h-full w-full max-w-md overflow-auto bg-white p-5 shadow-2xl"><div className="flex items-center justify-between"><h2 className="text-2xl font-black text-[#002B5C]">Carrito</h2><button onClick={() => setCartOpen(false)}><X /></button></div><div className="mt-5 space-y-3">{cart.length === 0 ? <div className="rounded-3xl border border-dashed border-blue-200 bg-blue-50 p-5 text-sm font-bold text-slate-500">El carrito está vacío.</div> : cart.map((item) => <div key={item.id} className="rounded-2xl border border-blue-100 p-3"><p className="font-black text-slate-900">{localized(item, lang).name}</p><p className="text-xs font-bold text-slate-500">{item.store}</p><div className="mt-3 flex items-center justify-between"><span className="font-black text-[#0072CE]">{money(item.price * item.quantity)}</span><div className="flex items-center gap-2"><button onClick={() => changeQuantity(item.id, -1)} className="rounded-full bg-slate-100 p-1"><Minus className="h-4 w-4" /></button><span className="text-sm font-black">{item.quantity}</span><button onClick={() => changeQuantity(item.id, 1)} className="rounded-full bg-slate-100 p-1"><Plus className="h-4 w-4" /></button></div></div></div>)}</div><div className="mt-5 flex justify-between border-t border-blue-100 pt-4 text-xl font-black text-[#002B5C]"><span>Total</span><span>{money(subtotal)}</span></div><a href="/usuario" className="mt-5 block w-full rounded-2xl bg-[#0072CE] px-5 py-3 text-center font-black text-white shadow-lg">Ver mis pedidos</a></aside></div>}
+      {cartOpen && <div className="fixed inset-0 z-[80] flex justify-end bg-slate-950/40"><aside className="h-full w-full max-w-md overflow-auto bg-white p-5 shadow-2xl"><div className="flex items-center justify-between"><h2 className="text-2xl font-black text-[#002B5C]">Carrito</h2><button onClick={() => setCartOpen(false)}><X /></button></div><div className="mt-5 space-y-3">{cart.length === 0 ? <div className="rounded-3xl border border-dashed border-blue-200 bg-blue-50 p-5 text-sm font-bold text-slate-500">El carrito está vacío.</div> : cart.map((item) => <div key={item.id} className="rounded-2xl border border-blue-100 p-3"><p className="font-black text-slate-900">{localized(item, lang).name}</p><p className="text-xs font-bold text-slate-500">{item.store}</p><div className="mt-3 flex items-center justify-between"><span className="font-black text-[#0072CE]">{money(item.price * item.quantity)}</span><div className="flex items-center gap-2"><button onClick={() => changeQuantity(item.id, -1)} className="rounded-full bg-slate-100 p-1"><Minus className="h-4 w-4" /></button><span className="text-sm font-black">{item.quantity}</span><button onClick={() => changeQuantity(item.id, 1)} className="rounded-full bg-slate-100 p-1"><Plus className="h-4 w-4" /></button></div></div></div>)}</div><div className="mt-5 flex justify-between border-t border-blue-100 pt-4 text-xl font-black text-[#002B5C]"><span>Total</span><span>{money(subtotal)}</span></div><button onClick={handleCheckout} disabled={cart.length === 0} className="mt-5 block w-full rounded-2xl bg-[#0072CE] px-5 py-3 text-center font-black text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50">Finalizar pedido</button><a href="/usuario" className="mt-3 block w-full rounded-2xl bg-blue-50 px-5 py-3 text-center font-black text-[#002B5C]">Ver pedidos anteriores</a></aside></div>}
     </main>
   );
 }
