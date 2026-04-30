@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, CreditCard, Home, MapPin, Minus, Plus, ShieldCheck, Store, Truck } from "lucide-react";
+import { ChevronDown, CreditCard, MapPin, Minus, Plus, ShieldCheck, Store, Truck } from "lucide-react";
 import { money, type MarketplaceProduct } from "@/lib/marketplace-products";
+import { getStoreLocation } from "@/lib/store-locations";
 
 type CartLine = MarketplaceProduct & { quantity: number };
 type UserData = { name?: string; email?: string; address?: string; phone?: string };
@@ -62,6 +63,26 @@ export default function CheckoutClient() {
   const total = Math.max(subtotal - discount + shipping, 0);
   const storeCount = new Set(cart.map((item) => item.store)).size;
 
+  const pickupStores = useMemo(() => {
+    const grouped = cart.reduce<Record<string, CartLine[]>>((acc, item) => {
+      acc[item.store] = acc[item.store] ?? [];
+      acc[item.store].push(item);
+      return acc;
+    }, {});
+
+    return Object.entries(grouped).map(([store, items]) => {
+      const location = getStoreLocation(items[0]);
+      return {
+        store,
+        address: location.address,
+        lat: location.lat,
+        lng: location.lng,
+        items,
+        totalItems: items.reduce((sum, item) => sum + item.quantity, 0)
+      };
+    });
+  }, [cart]);
+
   function changeQuantity(id: string, delta: number) {
     setCart((current) => {
       const nextCart = current.flatMap((item) => {
@@ -81,7 +102,9 @@ export default function CheckoutClient() {
 
   function confirmOrder() {
     if (cart.length === 0) return;
-    window.localStorage.setItem("faciliteago-address", JSON.stringify(address));
+    if (deliveryMode === "home") {
+      window.localStorage.setItem("faciliteago-address", JSON.stringify(address));
+    }
     const order = {
       id: `GO-${Date.now().toString().slice(-6)}`,
       status: "Pedido confirmado",
@@ -95,7 +118,8 @@ export default function CheckoutClient() {
       paymentMode: paymentMode === "installments" ? "Pago en cuotas CaixaBank" : "Pago al contado",
       pickup: `PK-${Date.now().toString().slice(-4)}`,
       date: new Date().toLocaleDateString("es-ES"),
-      address,
+      address: deliveryMode === "home" ? address : null,
+      pickupStores: deliveryMode === "pickup" ? pickupStores : [],
       items: cart.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: item.price, store: item.store }))
     };
     const existingOrders = readJson<any[]>("faciliteago-orders", []);
@@ -130,13 +154,38 @@ export default function CheckoutClient() {
               <button onClick={() => setDeliveryMode("pickup")} className={`rounded-2xl border px-4 py-4 text-left font-black transition ${deliveryMode === "pickup" ? "border-[#0072CE] bg-blue-50 text-[#002B5C]" : "border-slate-200 bg-white"}`}><Store className="mb-2 h-5 w-5" /> Recogida en comercio<p className="mt-1 text-xs font-semibold text-slate-500">Preparación rápida en los comercios seleccionados.</p></button>
               <button onClick={() => setDeliveryMode("home")} className={`rounded-2xl border px-4 py-4 text-left font-black transition ${deliveryMode === "home" ? "border-[#0072CE] bg-blue-50 text-[#002B5C]" : "border-slate-200 bg-white"}`}><Truck className="mb-2 h-5 w-5" /> Envío a domicilio<p className="mt-1 text-xs font-semibold text-slate-500">Entrega local simulada en Barcelona.</p></button>
             </div>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <input value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })} placeholder="Nombre y apellidos" className="rounded-2xl border border-blue-100 px-4 py-3 font-semibold outline-none" />
-              <input value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} placeholder="Teléfono" className="rounded-2xl border border-blue-100 px-4 py-3 font-semibold outline-none" />
-              <input value={address.address} onChange={(e) => setAddress({ ...address, address: e.target.value })} placeholder="Dirección" className="rounded-2xl border border-blue-100 px-4 py-3 font-semibold outline-none md:col-span-2" />
-              <input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} placeholder="Ciudad" className="rounded-2xl border border-blue-100 px-4 py-3 font-semibold outline-none" />
-              <input value={address.postalCode} onChange={(e) => setAddress({ ...address, postalCode: e.target.value })} placeholder="Código postal" className="rounded-2xl border border-blue-100 px-4 py-3 font-semibold outline-none" />
-            </div>
+
+            {deliveryMode === "pickup" ? (
+              <div className="mt-5 rounded-[24px] bg-blue-50 p-4">
+                <h3 className="flex items-center gap-2 text-lg font-black text-[#002B5C]"><MapPin className="h-5 w-5 text-[#0072CE]" /> Comercios donde recoger tu pedido</h3>
+                <p className="mt-1 text-sm font-semibold text-slate-600">Cada comercio prepara sus productos y podrás recogerlos en estas ubicaciones.</p>
+                <div className="mt-4 grid gap-3">
+                  {pickupStores.length === 0 ? <p className="rounded-2xl bg-white p-4 text-sm font-bold text-slate-500">No hay productos en el carrito.</p> : pickupStores.map((pickup) => (
+                    <article key={pickup.store} className="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm">
+                      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
+                        <div>
+                          <p className="text-lg font-black text-slate-950">{pickup.store}</p>
+                          <p className="mt-1 flex items-start gap-2 text-sm font-bold text-slate-600"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#0072CE]" /> {pickup.address}</p>
+                          <p className="mt-2 text-xs font-bold text-slate-500">{pickup.totalItems} producto(s) para recoger</p>
+                        </div>
+                        <a href={`https://www.google.com/maps/search/?api=1&query=${pickup.lat},${pickup.lng}`} target="_blank" rel="noreferrer" className="rounded-xl bg-[#0072CE] px-4 py-2 text-center text-xs font-black text-white">Abrir mapa</a>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {pickup.items.map((item) => <span key={item.id} className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-[#002B5C]">{item.quantity}x {item.name}</span>)}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <input value={address.name} onChange={(e) => setAddress({ ...address, name: e.target.value })} placeholder="Nombre y apellidos" className="rounded-2xl border border-blue-100 px-4 py-3 font-semibold outline-none" />
+                <input value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} placeholder="Teléfono" className="rounded-2xl border border-blue-100 px-4 py-3 font-semibold outline-none" />
+                <input value={address.address} onChange={(e) => setAddress({ ...address, address: e.target.value })} placeholder="Dirección" className="rounded-2xl border border-blue-100 px-4 py-3 font-semibold outline-none md:col-span-2" />
+                <input value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} placeholder="Ciudad" className="rounded-2xl border border-blue-100 px-4 py-3 font-semibold outline-none" />
+                <input value={address.postalCode} onChange={(e) => setAddress({ ...address, postalCode: e.target.value })} placeholder="Código postal" className="rounded-2xl border border-blue-100 px-4 py-3 font-semibold outline-none" />
+              </div>
+            )}
           </section>
 
           <section className="rounded-[28px] bg-white p-6 shadow-xl">
