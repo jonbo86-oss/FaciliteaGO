@@ -42,6 +42,7 @@ export default function ProductDetailClient({ product: baseProduct, productImage
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(`${storeLocation.lat},${storeLocation.lng}`)}&z=16&output=embed`;
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [coupon, setCoupon] = useState("");
   const [added, setAdded] = useState(false);
 
   useEffect(() => setCart(readCart()), []);
@@ -51,6 +52,8 @@ export default function ProductDetailClient({ product: baseProduct, productImage
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discount = coupon.toUpperCase() === "FINBROADPEAK26" ? Math.min(subtotal * 0.15, 15) : 0;
+  const total = Math.max(subtotal - discount, 0);
 
   function addToCart() {
     setCart((current) => {
@@ -77,7 +80,7 @@ export default function ProductDetailClient({ product: baseProduct, productImage
       id: `GO-${Date.now().toString().slice(-6)}`,
       status: lang === "ca" ? "Comanda confirmada" : "Pedido confirmado",
       store: cart.length === 1 ? cart[0].store : `${new Set(cart.map((item) => item.store)).size} ${lang === "ca" ? "comerços" : "comercios"}`,
-      total: money(subtotal),
+      total: money(total),
       pickup: `PK-${Date.now().toString().slice(-4)}`,
       date: new Date().toLocaleDateString("es-ES"),
       items: cart.map((item) => ({
@@ -92,6 +95,7 @@ export default function ProductDetailClient({ product: baseProduct, productImage
     window.localStorage.setItem("faciliteago-orders", JSON.stringify([order, ...existingOrders]));
     window.localStorage.setItem("faciliteago-cart", JSON.stringify([]));
     setCart([]);
+    setCoupon("");
     setCartOpen(false);
     router.push("/usuario");
   }
@@ -160,7 +164,7 @@ export default function ProductDetailClient({ product: baseProduct, productImage
         </article>
       </section>
 
-      {cartOpen && <div className="fixed inset-0 z-[80] flex justify-end bg-slate-950/40"><aside className="h-full w-full max-w-md overflow-auto bg-white p-5 shadow-2xl"><div className="flex items-center justify-between"><h2 className="text-2xl font-black text-[#002B5C]">Carrito</h2><button onClick={() => setCartOpen(false)}><X /></button></div><div className="mt-5 space-y-3">{cart.length === 0 ? <div className="rounded-3xl border border-dashed border-blue-200 bg-blue-50 p-5 text-sm font-bold text-slate-500">El carrito está vacío.</div> : cart.map((item) => <div key={item.id} className="rounded-2xl border border-blue-100 p-3"><p className="font-black text-slate-900">{localized(item, lang).name}</p><p className="text-xs font-bold text-slate-500">{item.store}</p><div className="mt-3 flex items-center justify-between"><span className="font-black text-[#0072CE]">{money(item.price * item.quantity)}</span><div className="flex items-center gap-2"><button onClick={() => changeQuantity(item.id, -1)} className="rounded-full bg-slate-100 p-1"><Minus className="h-4 w-4" /></button><span className="text-sm font-black">{item.quantity}</span><button onClick={() => changeQuantity(item.id, 1)} className="rounded-full bg-slate-100 p-1"><Plus className="h-4 w-4" /></button></div></div></div>)}</div><div className="mt-5 flex justify-between border-t border-blue-100 pt-4 text-xl font-black text-[#002B5C]"><span>Total</span><span>{money(subtotal)}</span></div><button onClick={handleCheckout} disabled={cart.length === 0} className="mt-5 block w-full rounded-2xl bg-[#0072CE] px-5 py-3 text-center font-black text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50">Finalizar pedido</button><a href="/usuario" className="mt-3 block w-full rounded-2xl bg-blue-50 px-5 py-3 text-center font-black text-[#002B5C]">Ver pedidos anteriores</a></aside></div>}
+      {cartOpen && <div className="fixed inset-0 z-[80] flex justify-end bg-slate-950/40"><aside className="h-full w-full max-w-md overflow-auto bg-white p-5 shadow-2xl"><div className="flex items-center justify-between"><h2 className="text-2xl font-black text-[#002B5C]">Carrito</h2><button onClick={() => setCartOpen(false)}><X /></button></div><div className="mt-5 space-y-3">{cart.length === 0 ? <div className="rounded-3xl border border-dashed border-blue-200 bg-blue-50 p-5 text-sm font-bold text-slate-500">El carrito está vacío.</div> : cart.map((item) => <div key={item.id} className="rounded-2xl border border-blue-100 p-3"><p className="font-black text-slate-900">{localized(item, lang).name}</p><p className="text-xs font-bold text-slate-500">{item.store}</p><div className="mt-3 flex items-center justify-between"><span className="font-black text-[#0072CE]">{money(item.price * item.quantity)}</span><div className="flex items-center gap-2"><button onClick={() => changeQuantity(item.id, -1)} className="rounded-full bg-slate-100 p-1"><Minus className="h-4 w-4" /></button><span className="text-sm font-black">{item.quantity}</span><button onClick={() => changeQuantity(item.id, 1)} className="rounded-full bg-slate-100 p-1"><Plus className="h-4 w-4" /></button></div></div></div>)}</div><div className="mt-5 rounded-2xl bg-slate-50 p-3"><label className="text-xs font-black uppercase text-slate-500">Cupón</label><input value={coupon} onChange={(event) => setCoupon(event.target.value)} placeholder="FINBROADPEAK26" className="mt-2 w-full rounded-xl border border-blue-100 px-3 py-2 text-sm font-bold outline-none" /></div><div className="mt-5 space-y-2 text-sm font-bold"><div className="flex justify-between"><span>Subtotal</span><span>{money(subtotal)}</span></div><div className="flex justify-between text-emerald-600"><span>Descuento</span><span>-{money(discount)}</span></div><div className="flex justify-between border-t border-blue-100 pt-3 text-xl font-black text-[#002B5C]"><span>Total</span><span>{money(total)}</span></div></div><button onClick={handleCheckout} disabled={cart.length === 0} className="mt-5 block w-full rounded-2xl bg-[#0072CE] px-5 py-3 text-center font-black text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50">Finalizar compra</button></aside></div>}
     </main>
   );
 }
