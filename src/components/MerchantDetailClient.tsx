@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { MapPin, Minus, Plus, ShoppingCart, Star, X } from "lucide-react";
 import { money, type MarketplaceProduct } from "@/lib/marketplace-products";
 import { resolvedProductImage } from "@/lib/product-images";
@@ -17,8 +18,10 @@ function readCart() {
 }
 
 export default function MerchantDetailClient({ merchant }: { merchant: Merchant }) {
+  const router = useRouter();
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [coupon, setCoupon] = useState("");
   const [addedProduct, setAddedProduct] = useState<string | null>(null);
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(`${merchant.lat},${merchant.lng}`)}&z=16&output=embed`;
 
@@ -29,6 +32,8 @@ export default function MerchantDetailClient({ merchant }: { merchant: Merchant 
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discount = coupon.toUpperCase() === "FINBROADPEAK26" ? Math.min(subtotal * 0.15, 15) : 0;
+  const total = Math.max(subtotal - discount, 0);
 
   function addToCart(product: MarketplaceProduct) {
     setCart((current) => {
@@ -49,6 +54,26 @@ export default function MerchantDetailClient({ merchant }: { merchant: Merchant 
     }));
   }
 
+  function handleCheckout() {
+    if (cart.length === 0) return;
+    const order = {
+      id: `GO-${Date.now().toString().slice(-6)}`,
+      status: "Pedido confirmado",
+      store: cart.length === 1 ? cart[0].store : `${new Set(cart.map((item) => item.store)).size} comercios`,
+      total: money(total),
+      pickup: `PK-${Date.now().toString().slice(-4)}`,
+      date: new Date().toLocaleDateString("es-ES"),
+      items: cart.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: item.price, store: item.store }))
+    };
+    const existingOrders = JSON.parse(window.localStorage.getItem("faciliteago-orders") || "[]");
+    window.localStorage.setItem("faciliteago-orders", JSON.stringify([order, ...existingOrders]));
+    window.localStorage.setItem("faciliteago-cart", JSON.stringify([]));
+    setCart([]);
+    setCoupon("");
+    setCartOpen(false);
+    router.push("/usuario");
+  }
+
   return (
     <main className="min-h-screen bg-[#f4f8ff] text-slate-950">
       <header className="sticky top-0 z-50 border-b border-blue-100 bg-white/95 px-4 py-4 backdrop-blur-xl">
@@ -58,46 +83,13 @@ export default function MerchantDetailClient({ merchant }: { merchant: Merchant 
         </div>
       </header>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 md:px-6">
-        <div className="overflow-hidden rounded-[34px] bg-cover bg-center shadow-2xl" style={{ backgroundImage: `linear-gradient(rgba(0,43,92,0.76), rgba(0,43,92,0.76)), url('${merchant.heroImage}')` }}>
-          <div className="p-7 text-white md:p-12">
-            <div className="flex flex-wrap gap-2"><span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold">{merchant.mainCategory}</span><span className="rounded-full bg-[#FFCC00] px-3 py-1 text-xs font-black text-[#002B5C]">{merchant.products.length} productos</span></div>
-            <h1 className="mt-5 max-w-4xl text-5xl font-black leading-tight md:text-7xl">{merchant.name}</h1>
-            <div className="mt-5 flex flex-wrap items-center gap-4 text-sm font-black text-blue-100"><span className="flex items-center gap-1"><Star className="h-4 w-4 fill-yellow-400 text-yellow-400" /> {merchant.rating}/5</span><span>{merchant.distance.toFixed(2)} km desde Las Ramblas</span><span>{merchant.district}</span></div>
-          </div>
-        </div>
-      </section>
+      <section className="mx-auto max-w-7xl px-4 py-8 md:px-6"><div className="overflow-hidden rounded-[34px] bg-cover bg-center shadow-2xl" style={{ backgroundImage: `linear-gradient(rgba(0,43,92,0.76), rgba(0,43,92,0.76)), url('${merchant.heroImage}')` }}><div className="p-7 text-white md:p-12"><div className="flex flex-wrap gap-2"><span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold">{merchant.mainCategory}</span><span className="rounded-full bg-[#FFCC00] px-3 py-1 text-xs font-black text-[#002B5C]">{merchant.products.length} productos</span></div><h1 className="mt-5 max-w-4xl text-5xl font-black leading-tight md:text-7xl">{merchant.name}</h1><div className="mt-5 flex flex-wrap items-center gap-4 text-sm font-black text-blue-100"><span className="flex items-center gap-1"><Star className="h-4 w-4 fill-yellow-400 text-yellow-400" /> {merchant.rating}/5</span><span>{merchant.distance.toFixed(2)} km desde Las Ramblas</span><span>{merchant.district}</span></div></div></div></section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-8 md:px-6">
-        <article className="overflow-hidden rounded-[32px] bg-white shadow-2xl">
-          <div className="grid md:grid-cols-[0.9fr_1.1fr]">
-            <div className="p-6 md:p-8">
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-[#0072CE]">Ubicación del comercio</p>
-              <h2 className="mt-2 text-3xl font-black text-[#002B5C]">{merchant.name}</h2>
-              <p className="mt-4 flex items-start gap-3 text-lg font-bold leading-7 text-slate-700"><MapPin className="mt-1 h-5 w-5 shrink-0 text-[#0072CE]" /> {merchant.address}</p>
-              <div className="mt-5 rounded-3xl bg-blue-50 p-4 text-sm font-bold text-slate-600"><p>Zona: {merchant.district}, Barcelona</p><p>Coordenadas simuladas: {merchant.lat.toFixed(5)}, {merchant.lng.toFixed(5)}</p></div>
-              <a href={`https://www.google.com/maps/search/?api=1&query=${merchant.lat},${merchant.lng}`} target="_blank" rel="noreferrer" className="mt-5 inline-flex rounded-2xl bg-[#0072CE] px-5 py-3 text-sm font-black text-white">Abrir en Google Maps</a>
-            </div>
-            <div className="h-[360px] bg-blue-50 md:h-full"><iframe title={`Mapa ${merchant.name}`} src={mapSrc} className="h-full w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" /></div>
-          </div>
-        </article>
-      </section>
+      <section className="mx-auto max-w-7xl px-4 pb-8 md:px-6"><article className="overflow-hidden rounded-[32px] bg-white shadow-2xl"><div className="grid md:grid-cols-[0.9fr_1.1fr]"><div className="p-6 md:p-8"><p className="text-sm font-black uppercase tracking-[0.18em] text-[#0072CE]">Ubicación del comercio</p><h2 className="mt-2 text-3xl font-black text-[#002B5C]">{merchant.name}</h2><p className="mt-4 flex items-start gap-3 text-lg font-bold leading-7 text-slate-700"><MapPin className="mt-1 h-5 w-5 shrink-0 text-[#0072CE]" /> {merchant.address}</p><div className="mt-5 rounded-3xl bg-blue-50 p-4 text-sm font-bold text-slate-600"><p>Zona: {merchant.district}, Barcelona</p><p>Coordenadas simuladas: {merchant.lat.toFixed(5)}, {merchant.lng.toFixed(5)}</p></div><a href={`https://www.google.com/maps/search/?api=1&query=${merchant.lat},${merchant.lng}`} target="_blank" rel="noreferrer" className="mt-5 inline-flex rounded-2xl bg-[#0072CE] px-5 py-3 text-sm font-black text-white">Abrir en Google Maps</a></div><div className="h-[360px] bg-blue-50 md:h-full"><iframe title={`Mapa ${merchant.name}`} src={mapSrc} className="h-full w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" /></div></div></article></section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6">
-        <div className="mb-5 rounded-[28px] bg-white p-5 shadow-xl"><p className="text-sm font-bold text-slate-500">Catálogo del comercio</p><h2 className="text-3xl font-black text-[#002B5C]">Productos de {merchant.name}</h2></div>
-        <div className="space-y-4">
-          {merchant.products.map((product, index) => (
-            <article key={product.id} className="grid gap-4 rounded-[28px] bg-white p-4 shadow-xl md:grid-cols-[150px_1fr_130px_150px] md:items-center">
-              <a href={`/producto/${product.slug}`} className="block overflow-hidden rounded-2xl bg-slate-100"><img src={resolvedProductImage(product, index)} alt={product.name} className="h-36 w-full object-cover transition hover:scale-105" /></a>
-              <div><p className="text-xs font-black uppercase tracking-wide text-[#0072CE]">{product.category}</p><a href={`/producto/${product.slug}`} className="mt-1 block text-2xl font-black text-slate-950 hover:text-[#0072CE]">{product.name}</a><p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-slate-600">{product.description}</p><p className="mt-2 text-xs font-bold text-slate-500">Stock {product.stock} · Recogida {product.pickup}</p></div>
-              <div className="md:text-right">{product.oldPrice && <p className="text-sm font-bold text-slate-400 line-through">{money(product.oldPrice)}</p>}<p className="text-3xl font-black text-[#0072CE]">{money(product.price)}</p></div>
-              <button onClick={() => addToCart(product)} className="rounded-2xl bg-[#0072CE] px-4 py-3 text-sm font-black text-white transition hover:bg-[#005fb0]">{addedProduct === product.id ? "Añadido" : "Añadir al carrito"}</button>
-            </article>
-          ))}
-        </div>
-      </section>
+      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6"><div className="mb-5 rounded-[28px] bg-white p-5 shadow-xl"><p className="text-sm font-bold text-slate-500">Catálogo del comercio</p><h2 className="text-3xl font-black text-[#002B5C]">Productos de {merchant.name}</h2></div><div className="space-y-4">{merchant.products.map((product, index) => (<article key={product.id} className="grid gap-4 rounded-[28px] bg-white p-4 shadow-xl md:grid-cols-[150px_1fr_130px_150px] md:items-center"><a href={`/producto/${product.slug}`} className="block overflow-hidden rounded-2xl bg-slate-100"><img src={resolvedProductImage(product, index)} alt={product.name} className="h-36 w-full object-cover transition hover:scale-105" /></a><div><p className="text-xs font-black uppercase tracking-wide text-[#0072CE]">{product.category}</p><a href={`/producto/${product.slug}`} className="mt-1 block text-2xl font-black text-slate-950 hover:text-[#0072CE]">{product.name}</a><p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-slate-600">{product.description}</p><p className="mt-2 text-xs font-bold text-slate-500">Stock {product.stock} · Recogida {product.pickup}</p></div><div className="md:text-right">{product.oldPrice && <p className="text-sm font-bold text-slate-400 line-through">{money(product.oldPrice)}</p>}<p className="text-3xl font-black text-[#0072CE]">{money(product.price)}</p></div><button onClick={() => addToCart(product)} className="rounded-2xl bg-[#0072CE] px-4 py-3 text-sm font-black text-white transition hover:bg-[#005fb0]">{addedProduct === product.id ? "Añadido" : "Añadir al carrito"}</button></article>))}</div></section>
 
-      {cartOpen && <div className="fixed inset-0 z-[80] flex justify-end bg-slate-950/40"><aside className="h-full w-full max-w-md overflow-auto bg-white p-5 shadow-2xl"><div className="flex items-center justify-between"><h2 className="text-2xl font-black text-[#002B5C]">Carrito</h2><button onClick={() => setCartOpen(false)}><X /></button></div><div className="mt-5 space-y-3">{cart.length === 0 ? <div className="rounded-3xl border border-dashed border-blue-200 bg-blue-50 p-5 text-sm font-bold text-slate-500">El carrito está vacío.</div> : cart.map((item) => <div key={item.id} className="rounded-2xl border border-blue-100 p-3"><p className="font-black text-slate-900">{item.name}</p><p className="text-xs font-bold text-slate-500">{item.store}</p><div className="mt-3 flex items-center justify-between"><span className="font-black text-[#0072CE]">{money(item.price * item.quantity)}</span><div className="flex items-center gap-2"><button onClick={() => changeQuantity(item.id, -1)} className="rounded-full bg-slate-100 p-1"><Minus className="h-4 w-4" /></button><span className="text-sm font-black">{item.quantity}</span><button onClick={() => changeQuantity(item.id, 1)} className="rounded-full bg-slate-100 p-1"><Plus className="h-4 w-4" /></button></div></div></div>)}</div><div className="mt-5 flex justify-between border-t border-blue-100 pt-4 text-xl font-black text-[#002B5C]"><span>Total</span><span>{money(subtotal)}</span></div><a href="/usuario" className="mt-5 block w-full rounded-2xl bg-[#0072CE] px-5 py-3 text-center font-black text-white shadow-lg">Ver mis pedidos</a></aside></div>}
+      {cartOpen && <div className="fixed inset-0 z-[80] flex justify-end bg-slate-950/40"><aside className="h-full w-full max-w-md overflow-auto bg-white p-5 shadow-2xl"><div className="flex items-center justify-between"><h2 className="text-2xl font-black text-[#002B5C]">Carrito</h2><button onClick={() => setCartOpen(false)}><X /></button></div><div className="mt-5 space-y-3">{cart.length === 0 ? <div className="rounded-3xl border border-dashed border-blue-200 bg-blue-50 p-5 text-sm font-bold text-slate-500">El carrito está vacío.</div> : cart.map((item) => <div key={item.id} className="rounded-2xl border border-blue-100 p-3"><p className="font-black text-slate-900">{item.name}</p><p className="text-xs font-bold text-slate-500">{item.store}</p><div className="mt-3 flex items-center justify-between"><span className="font-black text-[#0072CE]">{money(item.price * item.quantity)}</span><div className="flex items-center gap-2"><button onClick={() => changeQuantity(item.id, -1)} className="rounded-full bg-slate-100 p-1"><Minus className="h-4 w-4" /></button><span className="text-sm font-black">{item.quantity}</span><button onClick={() => changeQuantity(item.id, 1)} className="rounded-full bg-slate-100 p-1"><Plus className="h-4 w-4" /></button></div></div></div>)}</div><div className="mt-5 rounded-2xl bg-slate-50 p-3"><label className="text-xs font-black uppercase text-slate-500">Cupón</label><input value={coupon} onChange={(event) => setCoupon(event.target.value)} placeholder="FINBROADPEAK26" className="mt-2 w-full rounded-xl border border-blue-100 px-3 py-2 text-sm font-bold outline-none" /></div><div className="mt-5 space-y-2 text-sm font-bold"><div className="flex justify-between"><span>Subtotal</span><span>{money(subtotal)}</span></div><div className="flex justify-between text-emerald-600"><span>Descuento</span><span>-{money(discount)}</span></div><div className="flex justify-between border-t border-blue-100 pt-3 text-xl font-black text-[#002B5C]"><span>Total</span><span>{money(total)}</span></div></div><button onClick={handleCheckout} disabled={cart.length === 0} className="mt-5 w-full rounded-2xl bg-[#0072CE] px-5 py-3 font-black text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50">Finalizar compra</button></aside></div>}
     </main>
   );
 }
