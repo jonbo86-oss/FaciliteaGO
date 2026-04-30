@@ -6,6 +6,7 @@ import { Clock, MapPin, Minus, Plus, ShieldCheck, ShoppingCart, Star, Store, Tru
 import { money, type MarketplaceProduct } from "@/lib/marketplace-products";
 import { dict, productText, type Lang } from "@/lib/i18n";
 import { getStoreLocation } from "@/lib/store-locations";
+import { merchantSlug } from "@/lib/merchants";
 
 type CartLine = MarketplaceProduct & { quantity: number };
 
@@ -40,6 +41,7 @@ export default function ProductDetailClient({ product: baseProduct, productImage
   const product = localized(baseProduct, lang);
   const storeLocation = useMemo(() => getStoreLocation(baseProduct), [baseProduct]);
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(`${storeLocation.lat},${storeLocation.lng}`)}&z=16&output=embed`;
+  const storeHref = `/comercios/${merchantSlug(baseProduct.store)}`;
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [coupon, setCoupon] = useState("");
@@ -157,7 +159,10 @@ export default function ProductDetailClient({ product: baseProduct, productImage
                 <p>Distancia estimada desde Las Ramblas: {product.distance.toFixed(2)} km</p>
                 <p>Preparación estimada: {product.pickup}</p>
               </div>
-              <a href={`https://www.google.com/maps/search/?api=1&query=${storeLocation.lat},${storeLocation.lng}`} target="_blank" rel="noreferrer" className="mt-5 inline-flex rounded-2xl bg-[#0072CE] px-5 py-3 text-sm font-black text-white">Abrir en Google Maps</a>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <a href={storeHref} className="inline-flex justify-center rounded-2xl bg-[#0072CE] px-5 py-3 text-sm font-black text-white shadow-lg transition hover:bg-[#005fb0]">Ver comercio</a>
+                <a href={`https://www.google.com/maps/search/?api=1&query=${storeLocation.lat},${storeLocation.lng}`} target="_blank" rel="noreferrer" className="inline-flex justify-center rounded-2xl bg-blue-50 px-5 py-3 text-sm font-black text-[#002B5C] ring-1 ring-blue-100 transition hover:bg-[#FFCC00]">Abrir en Google Maps</a>
+              </div>
             </div>
             <div className="h-[360px] bg-blue-50 md:h-full"><iframe title={`Mapa ${product.store}`} src={mapSrc} className="h-full w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" /></div>
           </div>
